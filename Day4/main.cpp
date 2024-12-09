@@ -7,12 +7,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <fstream>
+#include <regex>
 
 bool MasCheckerUpDown(std::string _mas, int currI, int upDown, int currJ, const std::vector<std::string> & xmasList);
+bool XMasCheckerDiagonalUpDown(std::string _mas, int currI, int upDown, int currJ, int leftRight, const std::vector<std::string> & xmasList);
 bool MasCheckerDiagonalUpDown(std::string _mas, int currI, int upDown, int currJ, int leftRight, const std::vector<std::string> & xmasList);
 
 int main()
 {
+	//regex stuff
+	std::smatch foundFirstMass;
+	std::smatch foundSecondMass;
+	std::regex masMatch("(M[A-Z]S)|(M[A-Z]M)|(S[A-Z]M)|(S[A-Z]S)");
 	std::string xmas = "";
 	//open input file
 	std::ifstream day4File;
@@ -36,6 +42,14 @@ int main()
 	}
 
 	int xmasCount = 0;
+	int x_masCount = 0;
+
+	//returned from regex
+	//used when checking for top and bottom bounds of an x-mas
+	int topPos = 0;
+	int bottomPos = 0;
+	std::string firstMatch = "";
+	std::string secondMatch = "";
 
 	for(signed int i = 0; i != xmasList.size(); i++)
 	{
@@ -61,13 +75,13 @@ int main()
 			// dont look for S because it will double finds
 			if(xmasList[i][j] == 'X')
 			{
-				std::cout << "Found an X at spot: " << j << std::endl;
+				//std::cout << "Found an X at spot: " << j << std::endl;
 				// case 3: xmas down
 				if(i + 3 < xmasList.size())
 				{
 					if(MasCheckerUpDown("MAS", i, 1, j, xmasList))
 					{
-						std::cout << "Found an xmas going DOWN!" << std::endl;
+						//std::cout << "Found an xmas going DOWN!" << std::endl;
 						xmasCount++;
 					}
 				}
@@ -76,51 +90,93 @@ int main()
 				{
 					if(MasCheckerUpDown("MAS", i, -1, j, xmasList))
 					{
-						std::cout << "Found an xmas going UP!" << std::endl;
+						//std::cout << "Found an xmas going UP!" << std::endl;
 						xmasCount++;
 					}
 				}
 				// case 5: xmas diagonally down to the right
 				if(i + 3 < xmasList.size() && j + 3 < xmasList[i].size())
 				{
-					if(MasCheckerDiagonalUpDown("MAS", i, 1, j, 1, xmasList))
+					if(XMasCheckerDiagonalUpDown("MAS", i, 1, j, 1, xmasList))
 					{
-						std::cout << "Found an xmas going diagonally DOWN to the RIGHT!" << std::endl;
+						//std::cout << "Found an xmas going diagonally DOWN to the RIGHT!" << std::endl;
 						xmasCount++;
 					}
 				}
 				//case 6: xmas diagonally up to the left
 				if(i - 3 >= 0 && j - 3 >= 0)
 				{
-					if(MasCheckerDiagonalUpDown("MAS", i, -1, j, -1, xmasList))
+					if(XMasCheckerDiagonalUpDown("MAS", i, -1, j, -1, xmasList))
 					{
-						std::cout << "Found an xmas going diagonally UP to the LEFT!" << std::endl;
+						//std::cout << "Found an xmas going diagonally UP to the LEFT!" << std::endl;
 						xmasCount++;
 					}
 				}
 				//case 7: xmas diagonally down to the left
 				if(i + 3 < xmasList.size() && j - 3 >= 0)
 				{
-					if(MasCheckerDiagonalUpDown("MAS", i, 1, j, -1, xmasList))
+					if(XMasCheckerDiagonalUpDown("MAS", i, 1, j, -1, xmasList))
 					{
-						std::cout << "Found an xmas going diagonally DOWN to the LEFT!" << std::endl;
+						//std::cout << "Found an xmas going diagonally DOWN to the LEFT!" << std::endl;
 						xmasCount++;
 					}
 				}
 				//case 8: xmas diagonally up to the right
 				if(j + 3 < xmasList[i].size() && i - 3 >= 0)
 				{
-					if(MasCheckerDiagonalUpDown("MAS", i, -1, j, 1, xmasList))
+					if(XMasCheckerDiagonalUpDown("MAS", i, -1, j, 1, xmasList))
 					{
-						std::cout << "Found an xmas going diagonally UP to the RIGHT!" << std::endl;
+						//std::cout << "Found an xmas going diagonally UP to the RIGHT!" << std::endl;
 						xmasCount++;
 					}
+				}
+			}
+			//MAS | SAM checks
+			std::string checkMas = xmasList[i];
+			std::string nextCheck = "";
+			std::string nextCheckMas = "";
+			if(i + 2 < xmasList.size())
+			{
+				nextCheck = xmasList[i + 2];
+				while (std::regex_search(checkMas, foundFirstMass, masMatch))
+				{
+					firstMatch = foundFirstMass.str(0);
+					//MS
+					if(firstMatch == foundFirstMass.str(1))
+					{
+						//get the actual position from the string
+						topPos = foundFirstMass.position();
+						while(std::regex_search(nextCheck, foundSecondMass, masMatch))
+						{
+							//check 2 lines down
+
+							nextCheck = foundSecondMass.suffix().str();
+						}
+					}
+					//MM
+					else if(firstMatch == foundFirstMass.str(2))
+					{
+						topPos = foundFirstMass.position();
+					}
+					//SM
+					else if(firstMatch == foundFirstMass.str(3))
+					{
+						topPos = foundFirstMass.position();
+					}
+					//SS
+					else if(firstMatch == foundFirstMass.str(4))
+					{
+						topPos = foundFirstMass.position();
+					}
+
+					checkMas = foundFirstMass.suffix().str();
 				}
 			}
 		}
 		
 	}
 	std::cout << "There are " << xmasCount << " xmas's in the word search" << std::endl;
+	std::cout << "There are " << x_masCount << " x-mas's in the word search" << std::endl;
 
 	return 0;
 }
@@ -135,7 +191,7 @@ bool MasCheckerUpDown(std::string _mas, int currI, int upDown, int currJ, const 
 		// i + (1 * -1) + k
 		if(xmasList[(currI  + (k * upDown))][currJ] != _mas[k - 1])
 		{
-			std::cout << "Bad up/down xmas" << std::endl;
+			//std::cout << "Bad up/down xmas" << std::endl;
 			goodXmas = false;
 			break;
 		}
@@ -149,19 +205,26 @@ bool MasCheckerUpDown(std::string _mas, int currI, int upDown, int currJ, const 
 // |   S |    X | X    | S    |
 
 //leftRight = -1 for left, 1 for right
-bool MasCheckerDiagonalUpDown(std::string _mas, int currI, int upDown, int currJ, int leftRight, const std::vector<std::string> & xmasList)
+bool XMasCheckerDiagonalUpDown(std::string _mas, int currI, int upDown, int currJ, int leftRight, const std::vector<std::string> & xmasList)
 {
 	bool goodXmas = true;
 	for(unsigned int k = 1; k < 4; k++)
 	{
-		std::cout << "Checking: " << xmasList[(currI + (k * upDown))][currJ + (k * leftRight)] << std::endl;
-		std::cout << "Value: " << _mas[k - 1] << std::endl;
+		//std::cout << "Checking: " << xmasList[(currI + (k * upDown))][currJ + (k * leftRight)] << std::endl;
+		//std::cout << "Value: " << _mas[k - 1] << std::endl;
 		if((xmasList[(currI + (k * upDown))][currJ + (k * leftRight)] != _mas[k - 1]))
 		{
-			std::cout << "Bad xmas" << std::endl;
+			//std::cout << "Bad xmas" << std::endl;
 			goodXmas = false;
 			break;
 		}
 	}
+	return goodXmas;
+}
+
+bool MasCheckerDiagonalUpDown(int currI, int currJ, const std::vector<std::string> & xmasList)
+{
+	bool goodXmas = true;
+
 	return goodXmas;
 }
