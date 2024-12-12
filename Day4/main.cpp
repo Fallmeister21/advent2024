@@ -16,9 +16,6 @@ bool MasCheckerDiagonalUpDown(std::string _mas, int currI, int upDown, int currJ
 int main()
 {
 	//regex stuff
-	std::smatch foundFirstMass;
-	std::smatch foundSecondMass;
-	std::regex masMatch("(M[A-Z]S)|(M[A-Z]M)|(S[A-Z]M)|(S[A-Z]S)");
 	std::string xmas = "";
 	//open input file
 	std::ifstream day4File;
@@ -132,46 +129,40 @@ int main()
 				}
 			}
 			//MAS | SAM checks
-			std::string checkMas = xmasList[i];
-			std::string nextCheck = "";
-			std::string nextCheckMas = "";
-			if(i + 2 < xmasList.size())
+			//check for a
+			if(xmasList[i][j] == 'A')
 			{
-				nextCheck = xmasList[i + 2];
-				while (std::regex_search(checkMas, foundFirstMass, masMatch))
+				char topLeft;
+				char topRight;
+				char bottomLeft;
+				char bottomRight;
+				if(i-1 >= 0 && i+1 < xmasList.size())
 				{
-					firstMatch = foundFirstMass.str(0);
-					//MS
-					if(firstMatch == foundFirstMass.str(1))
+					if(j-1 >= 0 && j+1 <= xmasList[i].size())
 					{
-						//get the actual position from the string
-						topPos = foundFirstMass.position();
-						while(std::regex_search(nextCheck, foundSecondMass, masMatch))
-						{
-							//check 2 lines down
+						//top left
+						topLeft = xmasList[i - 1][j - 1];
+						//top right
+						topRight = xmasList[i - 1][j + 1];
+						//bottom left
+						bottomLeft = xmasList[i + 1][j - 1];
+						//bottom right
+						bottomRight = xmasList[i + 1][j + 1];
 
-							nextCheck = foundSecondMass.suffix().str();
-						}
+						if(topLeft == 'M' && topRight == 'S' && bottomLeft == 'M' && bottomRight == 'S')
+							x_masCount++;
+						else if(topLeft == 'M' && topRight == 'M' && bottomLeft == 'S' && bottomRight == 'S')
+							x_masCount++;
+						else if(topLeft == 'S' && topRight == 'M' && bottomLeft == 'S' && bottomRight == 'M')
+							x_masCount++;
+						else if(topLeft == 'M' && topRight == 'M' && bottomLeft == 'S' && bottomRight == 'S')
+							x_masCount++;
+						else if(topLeft == 'S' && topRight == 'S' && bottomLeft == 'M' && bottomRight == 'M')
+							x_masCount++;
 					}
-					//MM
-					else if(firstMatch == foundFirstMass.str(2))
-					{
-						topPos = foundFirstMass.position();
-					}
-					//SM
-					else if(firstMatch == foundFirstMass.str(3))
-					{
-						topPos = foundFirstMass.position();
-					}
-					//SS
-					else if(firstMatch == foundFirstMass.str(4))
-					{
-						topPos = foundFirstMass.position();
-					}
-
-					checkMas = foundFirstMass.suffix().str();
 				}
 			}
+			//check adjacent spaces i - 1, j - 1/j+1 // i + 1, j - 1, j + 1
 		}
 		
 	}
