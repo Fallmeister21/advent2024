@@ -10,6 +10,7 @@
 #include <regex>
 
 const char WALL = '#';
+const char OBSTACLE = 'O';
 
 void PrintMap(const std::vector<std::string> & _map);
 void CheckWallRow(std::vector<std::string> & _inMap, int & inTempRow, int & inCol, int upDown, int & totalSpaces, bool & oob, char & direction, int & origLine);
@@ -36,7 +37,6 @@ int main()
 	if(day6File)
 	{
 		getline(day6File, mapLine);
-		//std::cout << mapLine << std::endl;
 		overheadMap.push_back(mapLine);
 	}
 
@@ -109,31 +109,50 @@ void PrintMap(const std::vector<std::string> & _map)
 
 void CheckWallRow(std::vector<std::string> & _inMap, int & inTempRow, int & inCol, int upDown, int & totalSpaces, bool & oob, char & direction, int & origLine)
 {
+	bool marked = false;
+	bool runPlus = false;
 	while(_inMap[inTempRow][inCol] != '>' || _inMap[inTempRow][inCol] != '<')
 	{
 		if(_inMap[inTempRow + (1 * upDown)][inCol] != WALL)
 		{
-			_inMap[inTempRow][inCol] = 'x';
+			int tempLineCheck = inTempRow;
+			_inMap[inTempRow][inCol] = '|';
 			inTempRow += 1 * upDown;
-			if(_inMap[inTempRow][inCol] != 'x')
+			if(_inMap[inTempRow][inCol] == '.')
 				totalSpaces++;
+			if(_inMap[inTempRow][inCol] == '-' || _inMap[inTempRow][inCol] == '+')
+				marked = true;
 
 			//-1 for up, 1 for down
 			if(upDown == -1)
 				_inMap[inTempRow][inCol] = '^';
 			else if(upDown == 1)
 				_inMap[inTempRow][inCol] = 'v';
+			if(tempLineCheck == origLine)
+				_inMap[origLine][inCol] = '+';
+			if(marked)
+			{
+				if(!runPlus)
+					runPlus = true;
+				else
+				{
+					std::cout << "Marking" << std::endl;
+					_inMap[inTempRow + (-1 * (1 * upDown))][inCol] = '+';
+					marked = false;
+					runPlus = false;
+				}
+			}
 			if(inTempRow + (1 * upDown) < 0 && upDown == -1)
 			{
 				totalSpaces++;
-				_inMap[0][inCol] = 'x';
+				_inMap[0][inCol] = '|';
 				oob = true;
 				break;
 			}
 			else if(inTempRow + (1 * upDown) >= _inMap.size() && upDown == 1)
 			{
 				totalSpaces++;
-				_inMap[_inMap.size() - 1][inCol] = 'x';
+				_inMap[_inMap.size() - 1][inCol] = '|';
 				oob = true;
 				break;
 			}
@@ -164,29 +183,50 @@ void CheckWallRow(std::vector<std::string> & _inMap, int & inTempRow, int & inCo
 //-1 for left, 1 for right
 void CheckWallCol(std::vector<std::string> & _inMap, int & inRow, int & inTempCol, int leftRight, int & totalSpaces, bool & oob, char & direction, int & origCol)
 {
+	bool marked = false;
+	bool runPlus = false;
 	while(_inMap[inRow][inTempCol] != 'v' || _inMap[inRow][inTempCol] != '^')
 	{
 		if(_inMap[inRow][inTempCol + (1 * leftRight)] != WALL)
 		{
-			_inMap[inRow][inTempCol] = 'x';
+			int tempColCheck = inTempCol;
+			_inMap[inRow][inTempCol] = '-';
 			inTempCol += 1 * leftRight;
-			if(_inMap[inRow][inTempCol] != 'x')
+			if(_inMap[inRow][inTempCol] == '.')
 				totalSpaces++;
+			//temp pos for this
+			if(_inMap[inRow][inTempCol] == '|'  || _inMap[inRow][inTempCol] == '+')
+				marked = true;
 			if(leftRight == -1)
 				_inMap[inRow][inTempCol] = '<';
 			else if(leftRight == 1)
 				_inMap[inRow][inTempCol] = '>';
+
+			if(tempColCheck == origCol)
+				_inMap[inRow][origCol] = '+';
+			if(marked)
+			{
+				if(!runPlus)
+					runPlus = true;
+				else
+				{
+					std::cout << "Marking" << std::endl;
+					_inMap[inRow][inTempCol + (-1 * (1 * leftRight))] = '+';
+					marked = false;
+					runPlus = false;
+				}
+			}
 			if(inTempCol + (1 * leftRight) >= _inMap[inRow].size() && leftRight == 1)
 			{
 				totalSpaces++;
-				_inMap[inRow][_inMap[inRow].size() - 1] = 'x';
+				_inMap[inRow][_inMap[inRow].size() - 1] = '-';
 				oob = true;
 				break;
 			}
 			else if(inTempCol + (1 * leftRight) < 0 && leftRight == -1)
 			{
 				totalSpaces++;
-				_inMap[inRow][0] = 'x';
+				_inMap[inRow][0] = '-';
 				oob = true;
 				break;
 			}
